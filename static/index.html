@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2048 小游戏</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 昵称设置弹窗 -->
+  <div id="nickname-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon">🎮</div>
+      <h2>欢迎来玩 2048！</h2>
+      <p>请输入你的昵称，用于记录排行榜成绩</p>
+      <input type="text" id="nickname-input" maxlength="16" placeholder="输入昵称（最多16字）" />
+      <button id="nickname-confirm-btn">开始游戏</button>
+    </div>
+  </div>
+
+  <!-- 游戏结束弹窗 -->
+  <div id="gameover-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">🏆</div>
+      <h2 id="gameover-title">游戏结束！</h2>
+      <p id="gameover-score-text"></p>
+      <p id="gameover-rank-text"></p>
+      <div class="modal-btns">
+        <button id="gameover-restart-btn">再来一局</button>
+        <button id="gameover-leaderboard-btn" class="btn-secondary">查看排行榜</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 排行榜弹窗 -->
+  <div id="leaderboard-modal" class="modal-overlay hidden">
+    <div class="modal-box leaderboard-box">
+      <h2>🏆 全球排行榜</h2>
+      <div id="leaderboard-list">
+        <div class="loading">加载中...</div>
+      </div>
+      <button id="leaderboard-close-btn">关闭</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- 顶部标题区 -->
+    <header class="game-header">
+      <div class="title-area">
+        <h1 class="game-title">2048</h1>
+        <p class="game-subtitle">合并数字，挑战极限！</p>
+      </div>
+      <div class="score-area">
+        <div class="score-card">
+          <span class="score-label">分数</span>
+          <span class="score-value" id="score">0</span>
+        </div>
+        <div class="score-card best-card">
+          <span class="score-label">最高</span>
+          <span class="score-value" id="best-score">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 玩家信息 & 操作栏 -->
+    <div class="control-bar">
+      <div class="player-info">
+        <span class="player-avatar">👤</span>
+        <span id="player-name-display">未设置昵称</span>
+        <button id="change-name-btn" class="icon-btn" title="修改昵称">✏️</button>
+      </div>
+      <div class="action-btns">
+        <button id="leaderboard-btn" class="btn-outline">🏆 排行榜</button>
+        <button id="undo-btn" class="btn-outline">↩ 撤销</button>
+        <button id="new-game-btn" class="btn-primary">新游戏</button>
+      </div>
+    </div>
+
+    <!-- 游戏信息栏 -->
+    <div class="game-info-bar">
+      <span id="steps-display">步数：0</span>
+      <span id="time-display">时间：00:00</span>
+      <span id="rank-display" class="rank-badge hidden"></span>
+    </div>
+
+    <!-- 游戏棋盘 -->
+    <div class="board-wrapper">
+      <div id="game-board" class="game-board">
+        <!-- 背景格子 -->
+        <div class="board-bg">
+          <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+          <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+          <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+          <div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div><div class="cell-bg"></div>
+        </div>
+        <!-- 数字方块容器 -->
+        <div id="tiles-container" class="tiles-container"></div>
+      </div>
+    </div>
+
+    <!-- 游戏规则 -->
+    <div class="rules-card">
+      <h3>🎯 游戏规则</h3>
+      <ul>
+        <li>手指滑动（或键盘方向键）移动所有方块</li>
+        <li>两个相同数字的方块碰撞时会合并为一个</li>
+        <li>每次有效移动后会随机出现一个 2（90%）或 4（10%）</li>
+        <li>当方块达到 <strong>2048</strong> 时，你就赢了！可继续挑战更高分</li>
+        <li>点击撤销按钮可以撤回上一步</li>
+        <li>游戏进度会自动保存</li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>由 <a href="https://with.woa.com/" style="color: #8A2BE2;" target="_blank">With</a> 通过自然语言生成</p>
+    </footer>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>
