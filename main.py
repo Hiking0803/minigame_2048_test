@@ -45,6 +45,7 @@ def get_db():
 # 启动时自动检查并创建表结构
 @app.on_event("startup")
 async def startup_event():
+    print(f"📌 数据库配置: host={DB_HOST}, port={DB_PORT}, db={DB_NAME}, user={DB_USER}")
     try:
         conn = get_db()
         with conn.cursor() as cursor:
