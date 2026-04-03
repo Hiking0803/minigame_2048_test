@@ -196,6 +196,7 @@ html, body {
   padding: 10px;
   position: relative;
   box-shadow: var(--shadow);
+  touch-action: none;
 }
 .board-bg {
   display: grid; grid-template-columns: repeat(4, 1fr);

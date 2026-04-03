@@ -392,7 +392,7 @@ function stopTimer() {
 
 // ===== 游戏结束 =====
 async function showGameOver() {
-  gameoverTitle.textContent = score >= 2048 ? "🎉 恭喜达到2048！" : "游戏结束！";
+  gameoverTitle.textContent = score >= 2048 ? "🎉 成功通关！太棒了!" : "😊 差一点点，继续加油！";
   gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
   gameoverRankText.textContent = "正在提交分数...";
   gameoverModal.classList.remove("hidden");
@@ -508,6 +508,11 @@ board.addEventListener("touchstart", (e) => {
   touchStartX = e.touches[0].clientX;
   touchStartY = e.touches[0].clientY;
 }, { passive: true });
+
+board.addEventListener("touchmove", (e) => {
+  // 在游戏区域内滑动时阻止页面滚动
+  e.preventDefault();
+}, { passive: false });
 
 board.addEventListener("touchend", (e) => {
   const dx = e.changedTouches[0].clientX - touchStartX;
