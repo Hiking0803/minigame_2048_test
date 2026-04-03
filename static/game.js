@@ -39,6 +39,12 @@ const leaderboardList = document.getElementById("leaderboard-list");
 document.getElementById("new-game-btn").addEventListener("click", startNewGame);
 document.getElementById("undo-btn").addEventListener("click", undoMove);
 document.getElementById("leaderboard-btn").addEventListener("click", openLeaderboard);
+document.getElementById("end-game-btn").addEventListener("click", () => {
+  if (gameOver) return;
+  if (confirm("确定要结束当前游戏并结算分数吗？")) {
+    endGameManually();
+  }
+});
 document.getElementById("change-name-btn").addEventListener("click", openNicknameModal);
 document.getElementById("nickname-confirm-btn").addEventListener("click", confirmNickname);
 document.getElementById("gameover-restart-btn").addEventListener("click", () => {
@@ -279,13 +285,24 @@ function handleMove(direction) {
   updateScoreDisplay();
   saveGame();
 
-  // 检查胜利
-  if (!won && hasValue(2048)) {
+  // 检查是否达到8192（完美通关，强制结束）
+  if (hasValue(8192)) {
+    gameOver = true;
     won = true;
-    // 不强制结束，允许继续
+    stopTimer();
+    setTimeout(() => showPerfectWin(), 400);
+    return;
   }
 
-  // 检查游戏结束
+  // 检查首次达到2048（通关提示）
+  if (!won && hasValue(2048)) {
+    won = true;
+    stopTimer();
+    setTimeout(() => showFirstWin(), 300);
+    return;
+  }
+
+  // 检查游戏结束（无法移动）
   if (isGameOver()) {
     gameOver = true;
     stopTimer();
@@ -316,6 +333,14 @@ function isGameOver() {
       if (r + 1 < GRID_SIZE && grid[r][c] === grid[r + 1][c]) return false;
     }
   return true;
+}
+
+function getMaxTile() {
+  let max = 0;
+  for (let r = 0; r < GRID_SIZE; r++)
+    for (let c = 0; c < GRID_SIZE; c++)
+      if (grid[r][c] > max) max = grid[r][c];
+  return max;
 }
 
 // ===== 渲染 =====
@@ -401,7 +426,16 @@ function stopTimer() {
 
 // ===== 游戏结束 =====
 async function showGameOver() {
-  gameoverTitle.textContent = score >= 2048 ? "🎉 成功通关！太棒了!" : "😊 差一点点，继续加油！";
+  const maxTile = getMaxTile();
+  let title;
+  if (maxTile >= 2048) {
+    title = "🎉 成功通关！太棒了!";
+  } else if (maxTile > 1024) {
+    title = "😢 太遗憾了！继续加油！";
+  } else {
+    title = "💪 通关失败！再接再励！";
+  }
+  gameoverTitle.textContent = title;
   gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
   gameoverRankText.textContent = "正在提交分数...";
   gameoverModal.classList.remove("hidden");
@@ -435,6 +469,138 @@ async function showGameOver() {
   } else if (!playerName) {
     gameoverRankText.textContent = "设置昵称后可上传排行榜";
   }
+}
+
+// 首次达到2048的通关提示
+function showFirstWin() {
+  stopTimer();
+  gameoverTitle.textContent = "🎉 成功通关！太棒了!";
+  gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
+  gameoverRankText.textContent = "你可以选择结束游戏结算分数，或继续挑战更高数字（最高8192）！";
+
+  // 修改弹窗按钮：结束游戏 + 继续挑战
+  const restartBtn = document.getElementById("gameover-restart-btn");
+  const lbBtn = document.getElementById("gameover-leaderboard-btn");
+  restartBtn.textContent = "结束游戏并结算";
+  lbBtn.textContent = "🚀 继续挑战";
+  lbBtn.className = "btn-continue";
+
+  // 结束游戏并结算
+  restartBtn.onclick = () => {
+    gameOver = true;
+    gameoverModal.classList.add("hidden");
+    clearSavedGame();
+    submitAndShowResult();
+  };
+
+  // 继续挑战
+  lbBtn.onclick = () => {
+    gameoverModal.classList.add("hidden");
+    startTimer();
+    // 恢复按钮原始状态
+    restoreModalButtons();
+  };
+
+  gameoverModal.classList.remove("hidden");
+}
+
+// 达到8192的完美通关提示
+async function showPerfectWin() {
+  gameoverTitle.textContent = "🏆 完美通关！神乎奇迹！";
+  gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
+  gameoverRankText.textContent = "正在提交分数...";
+  restoreModalButtons();
+  gameoverModal.classList.remove("hidden");
+  clearSavedGame();
+
+  await submitScore();
+}
+
+// 玩家主动结束游戏
+async function endGameManually() {
+  if (gameOver) return;
+  gameOver = true;
+  stopTimer();
+
+  const maxTile = getMaxTile();
+  let title;
+  if (maxTile >= 2048) {
+    title = "🎉 成功通关！太棒了!";
+  } else if (maxTile > 1024) {
+    title = "😢 太遗憾了！继续加油！";
+  } else {
+    title = "💪 通关失败！再接再励！";
+  }
+  gameoverTitle.textContent = title;
+  gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
+  gameoverRankText.textContent = "正在提交分数...";
+  restoreModalButtons();
+  gameoverModal.classList.remove("hidden");
+  clearSavedGame();
+
+  await submitScore();
+}
+
+// 提交分数并显示结果
+async function submitAndShowResult() {
+  gameoverTitle.textContent = "🎉 成功通关！太棒了!";
+  gameoverScoreText.textContent = `本局得分：${score} 分，共走 ${steps} 步`;
+  gameoverRankText.textContent = "正在提交分数...";
+  restoreModalButtons();
+  gameoverModal.classList.remove("hidden");
+  clearSavedGame();
+
+  await submitScore();
+}
+
+// 提交分数的通用函数
+async function submitScore() {
+  if (playerName && score > 0 && !scoreSubmitted) {
+    scoreSubmitted = true;
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/api/score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ player_name: playerName, score }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.success) {
+        gameoverRankText.textContent = data.message;
+        rankEl.textContent = `排名第 ${data.rank} 名`;
+        rankEl.classList.remove("hidden");
+        bestScore = data.best_score;
+        bestScoreEl.textContent = bestScore;
+        localStorage.setItem("2048_best_score", bestScore);
+      }
+    } catch (e) {
+      if (e.name === "AbortError") {
+        gameoverRankText.textContent = "分数提交超时，请稍后重试";
+      } else {
+        gameoverRankText.textContent = "分数提交失败（网络错误）";
+      }
+      console.warn("分数提交失败:", e.message);
+    }
+  } else if (!playerName) {
+    gameoverRankText.textContent = "设置昵称后可上传排行榜";
+  }
+}
+
+// 恢复弹窗按钮为默认状态
+function restoreModalButtons() {
+  const restartBtn = document.getElementById("gameover-restart-btn");
+  const lbBtn = document.getElementById("gameover-leaderboard-btn");
+  restartBtn.textContent = "再来一局";
+  lbBtn.textContent = "查看排行榜";
+  lbBtn.className = "btn-secondary";
+  restartBtn.onclick = () => {
+    gameoverModal.classList.add("hidden");
+    startNewGame();
+  };
+  lbBtn.onclick = () => {
+    gameoverModal.classList.add("hidden");
+    openLeaderboard();
+  };
 }
 
 // ===== 排行榜 =====
@@ -487,6 +653,8 @@ function saveGame() {
   localStorage.setItem("2048_score", score);
   localStorage.setItem("2048_steps", steps);
   localStorage.setItem("2048_elapsed", elapsedSeconds);
+  localStorage.setItem("2048_won", won ? "1" : "0");
+  localStorage.setItem("2048_gameOver", gameOver ? "1" : "0");
 }
 
 function loadGame() {
@@ -497,6 +665,13 @@ function loadGame() {
     score = parseInt(localStorage.getItem("2048_score") || "0");
     steps = parseInt(localStorage.getItem("2048_steps") || "0");
     elapsedSeconds = parseInt(localStorage.getItem("2048_elapsed") || "0");
+    won = localStorage.getItem("2048_won") === "1";
+    gameOver = localStorage.getItem("2048_gameOver") === "1";
+    // 如果游戏已结束，不恢复
+    if (gameOver) {
+      clearSavedGame();
+      return false;
+    }
     updateScoreDisplay();
     prevGrid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
     tilesContainer.innerHTML = "";
@@ -506,6 +681,15 @@ function loadGame() {
   } catch (e) {
     return false;
   }
+}
+
+function clearSavedGame() {
+  localStorage.removeItem("2048_grid");
+  localStorage.removeItem("2048_score");
+  localStorage.removeItem("2048_steps");
+  localStorage.removeItem("2048_elapsed");
+  localStorage.removeItem("2048_won");
+  localStorage.removeItem("2048_gameOver");
 }
 
 // ===== 键盘控制 =====

@@ -66,8 +66,20 @@ html, body {
   background: #f0f0f0; color: #555; margin-top: 10px;
 }
 .modal-box button.btn-secondary:hover { background: #e0e0e0; }
+.modal-box button.btn-continue {
+  background: #4CAF50; color: #fff; margin-top: 10px;
+}
+.modal-box button.btn-continue:hover { background: #43A047; }
 
 .modal-btns { display: flex; flex-direction: column; gap: 0; }
+
+/* 结束游戏按钮 */
+.btn-end {
+  border-color: #e74c3c !important; color: #e74c3c !important;
+}
+.btn-end:hover {
+  background: #e74c3c !important; color: #fff !important;
+}
 
 /* 排行榜弹窗 */
 .leaderboard-box { max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
