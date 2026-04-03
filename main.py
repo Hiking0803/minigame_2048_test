@@ -19,11 +19,12 @@ app.add_middleware(
 )
 
 # 数据库配置（通过环境变量获取）
-DB_HOST = os.environ.get("DB_HOST", "11.142.154.110")
-DB_PORT = int(os.environ.get("DB_PORT", "3306"))
-DB_NAME = os.environ.get("DB_NAME", "cg40ijiu")
-DB_USER = os.environ.get("DB_USER", "with_mcawevoknpgtdvhp")
-DB_PASS = os.environ.get("DB_PASS", "yZA(s5w^a8waWy")
+# 优先读取 Railway MySQL 插件的变量名（MYSQLHOST等），兼容自定义变量名（DB_HOST等）
+DB_HOST = os.environ.get("MYSQLHOST", os.environ.get("DB_HOST", "11.142.154.110"))
+DB_PORT = int(os.environ.get("MYSQLPORT", os.environ.get("DB_PORT", "3306")))
+DB_NAME = os.environ.get("MYSQLDATABASE", os.environ.get("DB_NAME", "cg40ijiu"))
+DB_USER = os.environ.get("MYSQLUSER", os.environ.get("DB_USER", "with_mcawevoknpgtdvhp"))
+DB_PASS = os.environ.get("MYSQLPASSWORD", os.environ.get("DB_PASS", "yZA(s5w^a8waWy"))
 
 
 def get_db():
