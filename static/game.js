@@ -81,10 +81,19 @@ function confirmNickname() {
   fetchPlayerBest();
 }
 
+// 带超时的 fetch 封装
+function fetchWithTimeout(url, options = {}, timeout = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
 async function fetchPlayerBest() {
   if (!playerName) return;
   try {
-    const res = await fetch(`${API_BASE}/api/player/${encodeURIComponent(playerName)}`);
+    const res = await fetchWithTimeout(`${API_BASE}/api/player/${encodeURIComponent(playerName)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.found && data.score > bestScore) {
       bestScore = data.score;
@@ -96,7 +105,7 @@ async function fetchPlayerBest() {
       }
     }
   } catch (e) {
-    // 网络错误忽略
+    console.warn("获取玩家信息失败:", e.message);
   }
 }
 
@@ -400,11 +409,12 @@ async function showGameOver() {
   if (playerName && score > 0 && !scoreSubmitted) {
     scoreSubmitted = true;
     try {
-      const res = await fetch(`${API_BASE}/api/score`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/score`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ player_name: playerName, score }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success) {
         gameoverRankText.textContent = data.message;
@@ -415,7 +425,12 @@ async function showGameOver() {
         localStorage.setItem("2048_best_score", bestScore);
       }
     } catch (e) {
-      gameoverRankText.textContent = "分数提交失败（网络错误）";
+      if (e.name === "AbortError") {
+        gameoverRankText.textContent = "分数提交超时，请稍后重试";
+      } else {
+        gameoverRankText.textContent = "分数提交失败（网络错误）";
+      }
+      console.warn("分数提交失败:", e.message);
     }
   } else if (!playerName) {
     gameoverRankText.textContent = "设置昵称后可上传排行榜";
@@ -427,11 +442,17 @@ async function openLeaderboard() {
   leaderboardModal.classList.remove("hidden");
   leaderboardList.innerHTML = '<div class="loading">加载中...</div>';
   try {
-    const res = await fetch(`${API_BASE}/api/leaderboard?limit=20`);
+    const res = await fetchWithTimeout(`${API_BASE}/api/leaderboard?limit=20`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     renderLeaderboard(data);
   } catch (e) {
-    leaderboardList.innerHTML = '<div class="lb-empty">加载失败，请检查网络</div>';
+    if (e.name === "AbortError") {
+      leaderboardList.innerHTML = '<div class="lb-empty">⏱ 加载超时，请稍后重试</div>';
+    } else {
+      leaderboardList.innerHTML = '<div class="lb-empty">❌ 加载失败，请检查网络连接</div>';
+    }
+    console.warn("排行榜加载失败:", e.message);
   }
 }
 
